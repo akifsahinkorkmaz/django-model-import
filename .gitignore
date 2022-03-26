@@ -1,0 +1,15 @@
+# source dir 
+# ----------
+# Scripts (for activating virtual environment)
+source/Scripts
+
+# py config (for virtual environment)
+source/pyvenv.cfg
+
+# Lib (python packages for virtual environment)
+# Only some part of django is returned :
+source/Lib/site-packages/*
+!source/Lib/site-packages/django
+
+# Db
+source/dsh/db.sqlite3
