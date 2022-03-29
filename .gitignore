@@ -11,5 +11,9 @@ source/pyvenv.cfg
 source/Lib/site-packages/*
 !source/Lib/site-packages/django
 
+source/Lib/site-packages/django/*
+!source/Lib/site-packages/django/apps
+
+
 # Db
 source/dsh/db.sqlite3
