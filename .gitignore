@@ -14,6 +14,5 @@ source/Lib/site-packages/*
 source/Lib/site-packages/django/*
 !source/Lib/site-packages/django/apps
 
-
 # Db
 source/music_app/db.sqlite3
