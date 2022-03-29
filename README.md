@@ -37,3 +37,107 @@ Setup a Django project with 3 additional django apps (music, user, playlist).
 ---
 
 ## Django Models (for music_app)
+
+### Music:
+In `music_app/music/models.py` create a music model as:
+```python
+from django.db import models
+
+# Music (id (default), name, producer(s))
+
+# import user (producer(s))
+from user.models import User
+
+# Music model
+class Music(models.Model):
+    name = models.CharField(max_length=200, verbose_name="music_name")
+    producer = models.ManyToManyField(User)
+
+    def __str__(self):
+        return self.name
+```
+
+Register model in `music_app/music/admin.py` as:
+
+```python
+from django.contrib import admin
+from .models import Music
+
+# Register Music model
+admin.site.register(Music)
+```
+
+### Playlist:
+In `music_app/playlist/models.py` create a playlist model as:
+```python
+from django.db import models
+
+# Playlist (id (default), name, music(s))
+
+# import music
+from music.models import Music
+
+# Playlist model
+class Playlist(models.Model):
+    name = models.CharField(max_length=200, verbose_name="playlist_name")
+    music = models.ManyToManyField(Music)
+
+    def __str__(self):
+        return self.name
+```
+
+Register model in `music_app/playlist/admin.py` as:
+
+```python
+from django.contrib import admin
+from .models import Playlist
+
+# Register Playlist model
+admin.site.register(Playlist)
+```
+
+### User:
+In `music_app/user/models.py` create a user model as:
+```python
+from django.db import models
+
+# User (id (default), name, playlist(s))
+
+# import playlist
+from playlist.models import Playlist
+
+# User model
+class User(models.Model):
+    name = models.CharField(max_length=200, verbose_name="user_name")
+    playlist = models.ManyToManyField(Playlist)
+
+    def save(self, *args, **kwargs):
+        # Save model before creating a default playlist
+        super().save(*args, **kwargs)
+
+        default_playlist = Playlist(name="%s's musics" %self.name)
+        default_playlist.save()
+        self.playlist.add(default_playlist)
+
+    def __str__(self):
+        return self.name
+```
+
+Register model in `music_app/user/admin.py` as:
+
+```python
+from django.contrib import admin
+from .models import User
+
+# Register User model
+admin.site.register(User)
+```
+
+### Make migrations:
+
+- Make migrations and migrate.
+- See `Setup.md` for further information.
+
+## Error
+
+There is an error. For further information see `Error.md`.

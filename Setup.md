@@ -161,3 +161,16 @@ INSTALLED_APPS = [
 ]
 # ----------------------
 ```
+
+Make migrations:
+```bash
+# (source) C:\...\source\music_app>
+python manage.py makemigrations
+python manage.py migrate
+``` 
+
+Create superuser:
+```bash
+# (source) C:\...\source\music_app>
+python manage.py createsuperuser
+``` 
