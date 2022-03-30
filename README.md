@@ -151,16 +151,10 @@ admin.site.register(User)
 
 There is an error. For further information see `Error.md`.
 
+## Old Codes
+
+- The code that contains old models that create an error can be seen at `old_models_music_app/...`.
+- The code in `source/music_app/...` will be redesigned.
+
 ## Better Django Models
 
-### Setup:
-
-Setup another Django project with 3 additional django apps (music, user, playlist). 
-
----
-- `music_app` is the Django project's name in this tutorial. 
-
-- `source/music_app` is the path of Django project.
-
-- See `Setup.md` for further information.
----
