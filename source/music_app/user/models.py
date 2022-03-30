@@ -10,11 +10,11 @@ from playlist.models import Playlist
 class User(models.Model):
     name = models.CharField(max_length=200, verbose_name="user_name")
     # playlist can be null or blank. 
-    playlist = models.ManyToManyField('playlist.Playlist', null=True, blank=True)
+    playlist = models.ManyToManyField('playlist.Playlist', blank=True)
 
 
     def save(self, *args, **kwargs):
-        
+
         # If name field is changed
         name_old = self.name if self.pk else False 
   
