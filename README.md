@@ -55,6 +55,15 @@ class Music(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        # Save model before adding it to default playlist(s) of producer(s)
+        super().save(*args, **kwargs)
+
+        for producer in self.producer.all():
+            default_playlist = producer.playlist.get(name= "%s's musics" %producer.name)
+            default_playlist.music.add(self)
+            default_playlist.save()
 ```
 
 Register model in `music_app/music/admin.py` as:
@@ -141,3 +150,17 @@ admin.site.register(User)
 ## Error
 
 There is an error. For further information see `Error.md`.
+
+## Better Django Models
+
+### Setup:
+
+Setup another Django project with 3 additional django apps (music, user, playlist). 
+
+---
+- `music_app` is the Django project's name in this tutorial. 
+
+- `source/music_app` is the path of Django project.
+
+- See `Setup.md` for further information.
+---

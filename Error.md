@@ -16,7 +16,23 @@ ImportError: cannot import name 'Music' from 'music.models' (...\django_music_ap
 ```
 
 
-The reason behind this error is:
+Code snippets that generates this error:
+```python
+# music_app/music/models.py (line 6)
+from user.models import User
+# -------------------------
+
+# music_app/user/models.py (line 6)
+from playlist.models import Playlist
+# -------------------------
+
+# music_app/playlist/models.py (line 6)
+from music.models import Music
+# -------------------------
+```
+
+
+The reason behind this error:
 
 ```
 1. Music model imports User model
@@ -46,4 +62,4 @@ The reason behind this error is:
 ```
 
 
-This structure of python modules created a recursive import loop to the infinity. In real world it just crashes the app because python is trying to import something that is not there yet because it is trying to import something that is not there yet because...
+This structure of python modules and imports create a recursive import loop. In real world it just crashes the app because python is trying to import a module that is not ready yet because the module is trying to import another module that is not ready yet because...
