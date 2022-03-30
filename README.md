@@ -36,7 +36,7 @@ Setup a Django project with 3 additional django apps (music, user, playlist).
 - See `Setup.md` for further information.
 ---
 
-## Django Models (for music_app)
+## Django Models (see `old_models_music_app/...`)
 
 ### Music:
 In `music_app/music/models.py` create a music model as:
@@ -121,12 +121,24 @@ class User(models.Model):
     playlist = models.ManyToManyField(Playlist)
 
     def save(self, *args, **kwargs):
+
+        # If name field is changed
+        name_old = self.name if self.pk else False 
+  
         # Save model before creating a default playlist
         super().save(*args, **kwargs)
 
-        default_playlist = Playlist(name="%s's musics" %self.name)
-        default_playlist.save()
-        self.playlist.add(default_playlist)
+        # If model is newly created
+        if not self.pk:
+            default_playlist = Playlist(name="%s's musics" %self.name)
+            default_playlist.save()
+            self.playlist.add(default_playlist)
+
+        # If name field is changed change the playlist's name
+        if name_old:
+            default_playlist = self.playlist.get(name="%s's musics" %self.name)
+            default_playlist.name = "%s's musics" %self.name
+            default_playlist.save()
 
     def __str__(self):
         return self.name
@@ -158,3 +170,217 @@ There is an error. For further information see `Error.md`.
 
 ## Better Django Models
 
+Since models given above create error, redesigning model structures is necessary. Althoug fields of music, user and playlist models are same, implementation and coding of modules should change. To break import loop (see `Error.md`), using unnecessary imports for models should avoided. 
+
+Django is a highly opinionated framework. Which means, Django usually has a specific way to implement the solution to any given problem. This is what makes Django robust and fast for development. Django-models are no different. Django should handle foreign models wherever possible.
+
+
+### Music:
+In `music_app/music/models.py` change music model as:
+```python
+from django.db import models
+
+# Music (id (default), name, producer(s))
+
+# no need to import user (producer(s))
+
+# Music model
+class Music(models.Model):
+    name = models.CharField(max_length=200, verbose_name="music_name")
+    producer = models.ManyToManyField('user.User')
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        # Save model before adding it to default playlist(s) of producer(s)
+        super().save(*args, **kwargs)
+
+        for producer in self.producer.all():
+            default_playlist = producer.playlist.get(name= "%s's musics" %producer.name)
+            default_playlist.music.add(self)
+            default_playlist.save()
+```
+
+### Playlist:
+In `music_app/playlist/models.py` change playlist model as:
+```python
+from django.db import models
+
+# Playlist (id (default), name, music(s))
+
+# no need to import music
+
+# Playlist model
+class Playlist(models.Model):
+    name = models.CharField(max_length=200, verbose_name="playlist_name")
+    music = models.ManyToManyField('music.Music')
+
+    def __str__(self):
+        return self.name
+```
+
+### User:
+In `music_app/user/models.py` change user model as:
+```python
+from django.db import models
+
+# User (id (default), name, playlist(s))
+
+# importing playlist is necessary
+# Playlist class will be used on save method!
+from playlist.models import Playlist
+
+# User model
+class User(models.Model):
+    name = models.CharField(max_length=200, verbose_name="user_name")
+    playlist = models.ManyToManyField('playlist.Playlist')
+
+    def save(self, *args, **kwargs):
+        
+        # If name field is changed
+        name_old = self.name if self.pk else False 
+  
+        # Save model before creating a default playlist
+        super().save(*args, **kwargs)
+
+        # If model is newly created
+        if not self.pk:
+            default_playlist = Playlist(name="%s's musics" %self.name)
+            default_playlist.save()
+            self.playlist.add(default_playlist)
+
+        # If name field is changed change the playlist's name
+        if name_old:
+            default_playlist = self.playlist.get(name="%s's musics" %self.name)
+            default_playlist.name = "%s's musics" %self.name
+            default_playlist.save()
+
+    def __str__(self):
+        return self.name
+```
+
+### Make migrations (Again):
+
+- Make migrations and migrate.
+- See `Setup.md` for further information.
+
+----
+Migration process should be successful.
+
+---
+
+## Test:
+
+- Run django development server.
+- Create superuser
+- Visit admin panel
+- Test models
+
+## Error:
+
+Django admin module should force you to:
+-   create/add a playlist when creating user
+-   create/add a user when creating music
+-   create/add a music when creating playlist
+
+The reasen behind this is:
+-   user model has playlist field that can not be empty 
+-   music model has user field that can not be empty 
+-   playlist model has music field that can not be empty 
+
+The needs of music_app is:
+-   A music always has a producer even if it is anonym. 
+
+-   And user always has a playlist for songs they produced. But the default playlist is already enforced for user models with custom save method. Therefore there is no need to enforce it on field level.
+
+-   A playlist can be empty.
+
+The needs of user and playlist apps and implementation of models are not coinciding.
+
+## Better Django Models 2
+
+Since music model is spot on, it does not need to change.
+
+### Playlist:
+In `music_app/playlist/models.py` change playlist model as:
+```python
+from django.db import models
+
+# Playlist (id (default), name, music(s))
+
+# no need to import music
+
+# Playlist model
+class Playlist(models.Model):
+    name = models.CharField(max_length=200, verbose_name="playlist_name")
+    # music can be null or blank
+    music = models.ManyToManyField('music.Music', null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+```
+
+### User:
+In `music_app/user/models.py` change user model as:
+```python
+from django.db import models
+
+# User (id (default), name, playlist(s))
+
+# importing playlist is necessary
+# Playlist class will be used on save method!
+from playlist.models import Playlist
+
+# User model
+class User(models.Model):
+    name = models.CharField(max_length=200, verbose_name="user_name")
+    # playlist can be null or blank. 
+    playlist = models.ManyToManyField('playlist.Playlist', null=True, blank=True)
+
+
+    def save(self, *args, **kwargs):
+        
+        # If name field is changed
+        name_old = self.name if self.pk else False 
+  
+        # Save model before creating a default playlist
+        super().save(*args, **kwargs)
+
+        # If model is newly created
+        if not self.pk:
+            default_playlist = Playlist(name="%s's musics" %self.name)
+            default_playlist.save()
+            self.playlist.add(default_playlist)
+
+        # If name field is changed change the playlist's name
+        if name_old:
+            default_playlist = self.playlist.get(name="%s's musics" %self.name)
+            default_playlist.name = "%s's musics" %self.name
+            default_playlist.save()
+
+    def __str__(self):
+        return self.name
+```
+
+### Make migrations (Again):
+
+- Make migrations and migrate.
+- See `Setup.md` for further information.
+
+----
+Migration process should be successful.
+
+----
+
+## Test:
+
+- Run django development server.
+- Create superuser
+- Visit admin panel
+- Test models
+
+----
+Test should be successful.
+
+----
