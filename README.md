@@ -360,3 +360,19 @@ Migration process should be successful.
 Test should be successful.
 
 ----
+
+## Django Model Importer
+
+For further information on how django import models, see `Django-model-importer.md`.
+
+
+## Other Tips
+
+This structure and implementation of models are not the best practices. There is unsolved problems in data structure and logic of music app. Since this tutorial is focusing on model imports, other problems will not be argued extensively. 
+
+### Some of the problems that can occur:
+
+1) When using additional logic on model's built-in methods being careful is suggested.
+
+In this tutorial, while updating user models, superuser must select the "user's musics" playlist as well as user's other playlists. Otherwise another "user's musics" playlist will be created and user's other playlists are lost during the saving process. This can be prevented with more additional logic on model's built-in methods and some type of state for models.
+
